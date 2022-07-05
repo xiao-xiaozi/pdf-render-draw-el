@@ -9,13 +9,12 @@ GlobalWorkerOptions.workerSrc =
 // console.log(workerSrc);
 // GlobalWorkerOptions.workerSrc = workerSrc;
 
-onMounted(() => {
-  renderPDF()
-  setTimeout(() => {
-    drapRect()
-    konvaFn()
-  }, 3000)
-})
+// onMounted(() => {
+//   renderPDF()
+//   setTimeout(() => {
+//     drapRect()
+//   }, 3000)
+// })
 
 function drapRect () {
   const canvas = document.getElementById('the-canvas')
@@ -62,37 +61,6 @@ function mousemoveHandle (e) {
   console.log(canvas.getBoundingClientRect())
 }
 
-function konvaFn () {
-  const stage = new Konva.Stage({
-    container: 'container',
-    width: window.innerWidth,
-    height: window.innerHeight
-  })
-  // add canvas element
-  const layer = new Konva.Layer()
-  stage.add(layer)
-
-  // create shape
-  const box = new Konva.Rect({
-    x: 50,
-    y: 50,
-    width: 100,
-    height: 50,
-    fill: '#00D2FF',
-    stroke: 'black',
-    strokeWidth: 4,
-    draggable: true
-  })
-  layer.add(box)
-
-  // add cursor styling
-  box.on('mouseover', function () {
-    document.body.style.cursor = 'pointer'
-  })
-  box.on('mouseout', function () {
-    document.body.style.cursor = 'default'
-  })
-}
 </script>
 
 <template>
