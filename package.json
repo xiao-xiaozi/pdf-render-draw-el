@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint":"eslint --fix --ext .js,.vue src"
   },
   "dependencies": {
     "konva": "^8.3.10",
@@ -14,6 +15,14 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.3.3",
+    "eslint": "^8.17.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.2",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-vue": "^9.1.0",
+    "vite-plugin-eslint": "^1.6.1",
+    "sass": "^1.52.1",
     "vite": "^2.9.9"
   }
 }
