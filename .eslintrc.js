@@ -2,16 +2,16 @@ module.exports = {
   env: {
     browser: true,
     es2021: true,
-    node: true
+    node: true,
   },
   extends: [
     // 'plugin:vue/essential',
-    'standard',
-    'plugin:vue/vue3-recommended'
+    "standard",
+    "plugin:vue/vue3-recommended",
   ],
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module'
+    ecmaVersion: "latest",
+    sourceType: "module",
     // ecmaVersion: 6,
     // sourceType: 'module',
     // ecmaFeatures: {
@@ -20,14 +20,15 @@ module.exports = {
     // requireConfigFile: false,
     // parser: '@babel/eslint-parser'
   },
-  plugins: [
-    'vue'
-  ],
+  plugins: ["vue", "prettier"],
   rules: {
-    'vue/multi-word-component-names': ['error', {
-      ignores: ['index']// 需要忽略的组件名
-    }],
-    'no-debugger': 'off',
-    'no-console': 'off'
-  }
-}
+    "vue/multi-word-component-names": [
+      "error",
+      {
+        ignores: ["index"], // 需要忽略的组件名
+      },
+    ],
+    "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
+    "no-console": "off",
+  },
+};
