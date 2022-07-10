@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, onMounted, nextTick } from "vue";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import konvaStage from "../utils/konva.js";
 
 GlobalWorkerOptions.workerSrc = "/src/assets/pdf.worker.js";
 // 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.worker.js'
@@ -12,6 +13,7 @@ onMounted(() => {
 
 const canvasIdArr = reactive([]);
 let canvasScale = ref(1.5);
+let konvaStageArray = reactive([]);
 
 function readPDF() {
   function generateCanvasId(num) {
@@ -21,33 +23,48 @@ function readPDF() {
       count++;
     }
   }
+
+  function generateKonvaStage(canvasIdArr) {
+    canvasIdArr.forEach((id) => {
+      konvaStageArray.push(konvaStage(id, 800, 1280));
+    });
+  }
+
+  function findNode(id) {
+    let node = document.getElementById(id);
+    let childNodes = node.childNodes;
+    let descendantNodes = childNodes[0].childNodes;
+    return descendantNodes[0];
+  }
+
   getDocument("/src/assets/UML.pdf").promise.then((pdf) => {
     if (!canvasIdArr.length) generateCanvasId(pdf.numPages); // 根据页数生成canvas id数量
-    canvasIdArr.forEach((canvasId, index) => {
-      pdf.getPage(index + 1).then((page) => {
-        var scale = canvasScale.value;
-        var viewport = page.getViewport({ scale: scale });
-        var outputScale = window.devicePixelRatio || 1;
-
-        var canvas = document.getElementById(canvasId);
-        var context = canvas.getContext("2d");
-
-        canvas.width = Math.floor(viewport.width * outputScale);
-        canvas.height = Math.floor(viewport.height * outputScale);
-        canvas.style.width = Math.floor(viewport.width) + "px";
-        canvas.style.height = Math.floor(viewport.height) + "px";
-
-        var transform =
-          outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
-
-        var renderContext = {
-          canvasContext: context,
-          transform: transform,
-          viewport: viewport,
-        };
-        page.render(renderContext);
-      });
+    nextTick(() => {
+      if (canvasIdArr.length) generateKonvaStage(canvasIdArr); // 根据页数生成konva stage数量
     });
+    let pageNumber = pdf.numPages;
+    let currentPage = 1;
+    while (currentPage <= pageNumber) {
+      (function (currentPage) {
+        pdf.getPage(currentPage).then((page) => {
+          var scale = canvasScale.value;
+          var viewport = page.getViewport({ scale: scale });
+          var outputScale = window.devicePixelRatio || 1;
+          var canvas = findNode(canvasIdArr[currentPage - 1]);
+          var context = canvas.getContext("2d");
+          var transform =
+            outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+          var renderContext = {
+            canvasContext: context,
+            transform: transform,
+            viewport: viewport,
+          };
+          page.render(renderContext);
+        });
+      })(currentPage);
+
+      currentPage++;
+    }
   });
 }
 
@@ -64,15 +81,21 @@ function shrinkCanvas() {
 </script>
 <template>
   <section class="canvas-render-pdf">
-    <div class="canvas-container">
-      <div v-for="id in canvasIdArr" :key="id" :data-page="id">
-        <canvas :id="id" class="canvas" />
+    <div class="">
+      <div
+        v-for="id in canvasIdArr"
+        :key="id"
+        :data-page="id"
+        :id="id"
+        class="canvas-container"
+      >
+        <!-- <canvas :id="id" class="canvas" /> -->
       </div>
     </div>
-    <div class="tools">
+    <!-- <div class="tools">
       <button @click="shrinkCanvas">缩小</button>
       <button @click="enlargementCanvas">放大</button>
-    </div>
+    </div> -->
   </section>
 </template>
 <style lang="scss" scoped>
@@ -80,13 +103,10 @@ function shrinkCanvas() {
   border: 1px solid rgb(109, 100, 88);
   margin-top: 20px;
 }
-.canvas-render-pdf {
-  display: flex;
-  .canvas-container {
-    flex: 1;
-  }
-  .tools {
-    width: 200px;
-  }
+</style>
+<style>
+.konvajs-content {
+  border: 1px solid red;
+  margin-top: 20px;
 }
 </style>

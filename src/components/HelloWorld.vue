@@ -1,73 +1,78 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted } from "vue";
 // import pdfjsLib from "pdfjs-dist";
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
-import Konva from 'konva'
+import Konva from "konva";
 
-GlobalWorkerOptions.workerSrc =
-  'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.worker.js'
-// console.log(workerSrc);
-// GlobalWorkerOptions.workerSrc = workerSrc;
+onMounted(() => {
+  konvaStage();
+  findNode();
+});
 
-// onMounted(() => {
-//   renderPDF()
-//   setTimeout(() => {
-//     drapRect()
-//   }, 3000)
-// })
+function konvaStage() {
+  var width = window.innerWidth;
+  var height = window.innerHeight;
 
-function drapRect () {
-  const canvas = document.getElementById('the-canvas')
-  const ctx = canvas.getContext('2d')
-  ctx.strokeStyle = 'green'
-  ctx.strokeRect(0, 0, 100, 100)
+  var stage = new Konva.Stage({
+    container: "container",
+    width: width,
+    height: height,
+    id: "the-canvas",
+  });
+
+  var layer = new Konva.Layer();
+
+  var colors = ["red", "orange", "yellow", "green", "blue", "purple"];
+
+  for (var i = 0; i < 6; i++) {
+    var box = new Konva.Rect({
+      x: i * 30 + 50,
+      y: i * 18 + 40,
+      fill: colors[i],
+      stroke: "black",
+      strokeWidth: 4,
+      draggable: true,
+      width: 100,
+      height: 50,
+    });
+
+    box.on("dragstart", function () {
+      this.moveToTop();
+    });
+
+    box.on("dragmove", function () {
+      document.body.style.cursor = "pointer";
+    });
+    /*
+     * dblclick to remove box for desktop app
+     * and dbltap to remove box for mobile app
+     */
+    box.on("dblclick dbltap", function () {
+      this.destroy();
+    });
+
+    box.on("mouseover", function () {
+      document.body.style.cursor = "pointer";
+    });
+    box.on("mouseout", function () {
+      document.body.style.cursor = "default";
+    });
+
+    layer.add(box);
+  }
+
+  // add the layer to the stage
+  stage.add(layer);
 }
 
-function renderPDF () {
-  getDocument('/src/assets/UML.pdf')
-    .promise.then(function (pdf) {
-      pdf.getPage(1).then((page) => {
-        const scale = 1.5
-        const viewport = page.getViewport({ scale })
-        const outputScale = window.devicePixelRatio || 1
-
-        const canvas = document.getElementById('the-canvas')
-        const context = canvas.getContext('2d')
-
-        canvas.width = Math.floor(viewport.width * outputScale)
-        canvas.height = Math.floor(viewport.height * outputScale)
-        canvas.style.width = Math.floor(viewport.width) + 'px'
-        canvas.style.height = Math.floor(viewport.height) + 'px'
-
-        const transform =
-          outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null
-
-        const renderContext = {
-          canvasContext: context,
-          transform,
-          viewport
-        }
-        page.render(renderContext)
-      })
-    })
-    .catch((error) => {
-      console.log(error)
-    })
+function findNode(id) {
+  let node = document.getElementById(id);
+  let childNodes = node.childNodes;
+  let descendantNodes = childNodes[0].childNodes;
+  console.log(descendantNodes[0]);
 }
-
-function mousemoveHandle (e) {
-  console.log(e)
-  const canvas = document.getElementById('the-canvas')
-  console.log(canvas.getBoundingClientRect())
-}
-
 </script>
 
 <template>
-  <canvas
-    id="the-canvas"
-    @mousedown="mousemoveHandle"
-  />
   <div id="container" />
 </template>
 
