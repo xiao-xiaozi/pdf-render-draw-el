@@ -2,6 +2,7 @@
 import { reactive, ref, onMounted, nextTick } from "vue";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import konvaStage from "../utils/konva.js";
+import Konva from "konva";
 
 GlobalWorkerOptions.workerSrc = "/src/assets/pdf.worker.js";
 // 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.worker.js'
@@ -41,6 +42,7 @@ function readPDF() {
     if (!canvasIdArr.length) generateCanvasId(pdf.numPages); // 根据页数生成canvas id数量
     nextTick(() => {
       if (canvasIdArr.length) generateKonvaStage(canvasIdArr); // 根据页数生成konva stage数量
+      testFn(konvaStageArray[0]);
     });
     let pageNumber = pdf.numPages;
     let currentPage = 1;
@@ -66,6 +68,66 @@ function readPDF() {
       currentPage++;
     }
   });
+}
+
+function testFn(stage) {
+  let layer = new Konva.Layer();
+  var box = new Konva.Rect({
+    x: 1 * 30 + 50,
+    y: 1 * 18 + 40,
+    fill: "orange",
+    stroke: "black",
+    strokeWidth: 4,
+    draggable: true,
+    width: 100,
+    height: 100,
+  });
+  box.on("dragstart", function () {
+    this.moveToTop();
+  });
+
+  box.on("dragmove", function () {
+    document.body.style.cursor = "pointer";
+  });
+  // 限制拖拽边界
+  box.dragBoundFunc(function (pos) {
+    var newPos = {
+      x: pos.x,
+      y: pos.y,
+    };
+    if (newPos.x < 0) {
+      newPos.x = 0;
+    }
+    if (newPos.y < 0) {
+      newPos.y = 0;
+    }
+    if (newPos.x > stage.width() - box.width()) {
+      newPos.x = stage.width() - box.width();
+    }
+    if (newPos.y > stage.height() - box.height()) {
+      newPos.y = stage.height() - box.height();
+    }
+    if (newPos.x === 0 || newPos.y === 0) box.stopDrag();
+    return newPos;
+  });
+  //
+  /*
+   * dblclick to remove box for desktop app
+   * and dbltap to remove box for mobile app
+   */
+  box.on("dblclick dbltap", function () {
+    this.destroy();
+  });
+
+  box.on("mouseover", function () {
+    document.body.style.cursor = "pointer";
+  });
+  box.on("mouseout", function () {
+    document.body.style.cursor = "default";
+  });
+
+  layer.add(box);
+  stage.add(layer);
 }
 
 function enlargementCanvas() {
