@@ -107,9 +107,13 @@ function testFn(stage) {
     if (newPos.y > stage.height() - box.height()) {
       newPos.y = stage.height() - box.height();
     }
-    if (newPos.x === 0 || newPos.y === 0) box.stopDrag();
+    // if (newPos.x === 0 || newPos.y === 0) box.stopDrag();
     return newPos;
   });
+  box.on('dragend', function(params){ // 获取停止拖拽时元素的坐标
+    let {x,y} = params.target.attrs // 以canvas左上角为原点，元素左上角的坐标
+    console.log(x,y)
+  })
   //
   /*
    * dblclick to remove box for desktop app
