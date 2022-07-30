@@ -1,7 +1,14 @@
 import Konva from "konva";
+import { nanoid } from "nanoid";
 
-export default function konvaStage(id, width, height) {
-  let runDropCallback = false;
+export default function konvaStage(
+  id,
+  width,
+  height,
+  addDiagramCallback,
+  removeDiagramCallback,
+  updateAxis
+) {
   var stage = new Konva.Stage({
     container: id,
     width: width,
@@ -22,18 +29,25 @@ export default function konvaStage(id, width, height) {
   container.addEventListener("dragover", function (e) {
     e.preventDefault(); // !important
   });
+
   container.addEventListener("drop", function (e) {
-    console.log(e);
-    addRectToCanvas(stage, {
+    // 元素坐标
+    let axis = {
       x: e.offsetX,
       y: e.offsetY,
-    });
+    };
+    let id = nanoid(5);
+    addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis);
+    // let canvasId = stage.attrs.container.id; // 通过canvasId知悉为第几个canvas
+    let canvasId = stage.attrs.container.id.split("-")[2]; // 通过canvasId知悉为第几个canvas
+    addDiagramCallback({ id, axis, canvasId });
+    // addDiagramCallback({ id, x: axis.x, y: axis.y, canvasId });
   });
   return stage;
 }
 
 // 往canvas中添加方形
-function addRectToCanvas(stage, { x, y }) {
+function addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis) {
   let layer;
   let layers = stage.getLayers();
   if (layers.length >= 2) {
@@ -44,8 +58,8 @@ function addRectToCanvas(stage, { x, y }) {
 
   var diagram = new Konva.Rect({
     // react坐标点为左上角
-    x: x - 100 / 2,
-    y: y - 100 / 2,
+    x: axis.x - 100 / 2,
+    y: axis.y - 100 / 2,
     fill: "orange",
     stroke: "black",
     strokeWidth: 1,
@@ -81,9 +95,11 @@ function addRectToCanvas(stage, { x, y }) {
     return newPos;
   });
   diagram.on("dragend", function (params) {
-    // 获取停止拖拽时元素的坐标
-    let { x, y } = params.target.attrs; // 以canvas左上角为原点，元素左上角的坐标
-    console.log(x, y);
+    // 获取停止拖拽时元素的坐标, 以canvas左上角为原点，元素左上角的坐标
+    let { x, y } = params.target.attrs;
+    // axis.x = x.toFixed(2);
+    // axis.y = y.toFixed(2);
+    updateAxis(id, x.toFixed(2), y.toFixed(2));
   });
   //
   /*
@@ -91,6 +107,7 @@ function addRectToCanvas(stage, { x, y }) {
    * and dbltap to remove diagram for mobile app
    */
   diagram.on("dblclick dbltap", function () {
+    removeDiagramCallback(id);
     this.destroy();
   });
 
