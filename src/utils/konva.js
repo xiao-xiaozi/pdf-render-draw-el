@@ -1,6 +1,6 @@
 import Konva from "konva";
 
-export default function konvaStage(id, width, height, dropCallback) {
+export default function konvaStage(id, width, height) {
   let runDropCallback = false;
   var stage = new Konva.Stage({
     container: id,
@@ -13,23 +13,27 @@ export default function konvaStage(id, width, height, dropCallback) {
     // clearBeforeDraw: false,
   });
   stage.add(layer);
+
+  // 图形绘制layout
+  var diagramLayer = new Konva.Layer();
+  stage.add(diagramLayer);
+
   let container = stage.container();
   container.addEventListener("dragover", function (e) {
     e.preventDefault(); // !important
   });
   container.addEventListener("drop", function (e) {
-    addRectToCanvas(stage);
-    // fix:首次渲染图形时原渲染的pdf会丢失，在首次渲染图形后，再次渲染pdf
-    if (!runDropCallback) {
-      dropCallback();
-      runDropCallback = true;
-    }
+    console.log(e);
+    addRectToCanvas(stage, {
+      x: e.offsetX,
+      y: e.offsetY,
+    });
   });
   return stage;
 }
 
 // 往canvas中添加方形
-function addRectToCanvas(stage) {
+function addRectToCanvas(stage, { x, y }) {
   let layer;
   let layers = stage.getLayers();
   if (layers.length >= 2) {
@@ -40,26 +44,15 @@ function addRectToCanvas(stage) {
 
   var diagram = new Konva.Rect({
     // react坐标点为左上角
-    x: 1 * 30 + 5,
-    y: 1 * 18 + 4,
+    x: x - 100 / 2,
+    y: y - 100 / 2,
     fill: "orange",
     stroke: "black",
-    strokeWidth: 4,
+    strokeWidth: 1,
     draggable: true,
     width: 100,
     height: 100,
   });
-  // let diagram = new Konva.Circle({
-  //   // 坐标点为圆心
-  //   x: 1 * 30 + 5,
-  //   y: 1 * 18 + 4,
-  //   radius: 50,
-  //   fill: "orange",
-  //   draggable: true,
-  //   width: 100,
-  //   height: 100,
-  // });
-  //
   diagram.on("dragstart", function () {
     this.moveToTop();
   });

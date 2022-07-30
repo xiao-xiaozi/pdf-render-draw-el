@@ -27,9 +27,7 @@ function initCanvasStage() {
   // 根据canvasId数量，生成Konva Stage数量
   function generateKonvaStage(canvasIdArr) {
     canvasIdArr.forEach((id) => {
-      konvaStageArray.push(
-        konvaStage(id, 800, 1280, initCanvasStage.bind(this))
-      );
+      konvaStageArray.push(konvaStage(id, 800, 1280));
     });
   }
 
@@ -84,7 +82,9 @@ function renderPDF() {
   <section class="canvas-render-pdf">
     <!-- 可添加的元素 -->
     <div class="diagram-container">
-      <div class="square" draggable="true"></div>
+      <div class="position-box">
+        <div class="square" draggable="true"></div>
+      </div>
     </div>
     <div class="canvas-container">
       <div
@@ -97,7 +97,9 @@ function renderPDF() {
     </div>
     <!-- 元素的坐标，页数信息 -->
     <div class="diagram-coordinates">
-      <button @click="initCanvasStage">渲染PDF</button>
+      <div class="position-box">
+        <button @click="initCanvasStage">渲染PDF</button>
+      </div>
     </div>
   </section>
 </template>
@@ -107,6 +109,9 @@ function renderPDF() {
   .diagram-container,
   .diagram-coordinates {
     width: 400px;
+    .position-box {
+      position: fixed;
+    }
   }
   .canvas-container {
     flex: 1;
