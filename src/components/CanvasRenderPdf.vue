@@ -1,19 +1,21 @@
 <script setup>
 import { reactive, ref, onMounted, nextTick } from "vue";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import { getDocument } from "pdfjs-dist";
 import konvaStage from "../utils/konva.js";
-
-GlobalWorkerOptions.workerSrc = "/src/assets/pdf.worker.js";
-// 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.worker.js'
+import { renderPDF } from "../utils/renderPDF.js";
 
 onMounted(() => {
   initCanvasStage();
 });
 
 const canvasIdArray = reactive([]);
-let canvasScale = ref(1.5);
+let canvasScale = ref(0.95);
+let canvasWidth = ref(612);
+let canvasHeight = ref(792);
 let konvaStageArray = reactive([]);
 let diagramArray = reactive([]); // 插入到canvas中的图形
+
+let pdfPath = ref("/src/assets/UML.pdf");
 
 function initCanvasStage() {
   // 根据输入数量，生成canvasId
@@ -31,8 +33,8 @@ function initCanvasStage() {
       konvaStageArray.push(
         konvaStage(
           id,
-          800,
-          1280,
+          canvasWidth.value,
+          canvasHeight.value,
           addDiagram.bind(this),
           removeDiagram.bind(this),
           updateDiagramAxis
@@ -41,50 +43,14 @@ function initCanvasStage() {
     });
   }
 
-  getDocument("/src/assets/UML.pdf").promise.then((pdf) => {
+  // getDocument("/src/assets/UML.pdf").promise.then((pdf) => {
+  getDocument(pdfPath.value).promise.then((pdf) => {
     if (!canvasIdArray.length) generateCanvasId(pdf.numPages); // 根据页数生成canvas id数量
     nextTick(() => {
       if (canvasIdArray.length && !konvaStageArray.length)
         generateKonvaStage(canvasIdArray); // 根据页数生成konva stage数量
-      renderPDF();
+      renderPDF(pdfPath.value, canvasScale.value, canvasIdArray);
     });
-  });
-}
-
-function renderPDF() {
-  if (!canvasIdArray.length || !konvaStageArray.length)
-    throw new Error("Please run initCanvasStage first");
-  // 找到canvas节点
-  function findCanvasNode(id) {
-    let node = document.getElementById(id);
-    let childNodes = node.childNodes;
-    let descendantNodes = childNodes[0].childNodes;
-    return descendantNodes[0];
-  }
-  getDocument("/src/assets/UML.pdf").promise.then((pdf) => {
-    let pageNumber = pdf.numPages;
-    let currentPage = 1;
-    while (currentPage <= pageNumber) {
-      (function (currentPage) {
-        pdf.getPage(currentPage).then((page) => {
-          var scale = canvasScale.value;
-          var viewport = page.getViewport({ scale: scale });
-          var outputScale = window.devicePixelRatio || 1;
-          var canvas = findCanvasNode(canvasIdArray[currentPage - 1]);
-          var context = canvas.getContext("2d");
-          var transform =
-            outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
-          var renderContext = {
-            canvasContext: context,
-            transform: transform,
-            viewport: viewport,
-          };
-          page.render(renderContext);
-        });
-      })(currentPage);
-
-      currentPage++;
-    }
   });
 }
 

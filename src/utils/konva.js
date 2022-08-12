@@ -22,7 +22,7 @@ export default function konvaStage(
   stage.add(layer);
 
   // 图形绘制layout
-  var diagramLayer = new Konva.Layer();
+  var diagramLayer = new Konva.Layer()
   stage.add(diagramLayer);
 
   let container = stage.container();
@@ -64,8 +64,8 @@ function addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis) {
     stroke: "black",
     strokeWidth: 1,
     draggable: true,
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 120,
   });
   diagram.on("dragstart", function () {
     this.moveToTop();
@@ -99,7 +99,11 @@ function addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis) {
     let { x, y } = params.target.attrs;
     // axis.x = x.toFixed(2);
     // axis.y = y.toFixed(2);
-    updateAxis(id, x.toFixed(2), y.toFixed(2));
+    // console.log(layer.canvas.height)
+    let { height } = layer.canvas // canvas 高度
+    let offsetOriginY = height - Math.floor(y)
+    // updateAxis(id, x.toFixed(2), y.toFixed(2));
+    updateAxis(id, Math.floor(x) + 60, offsetOriginY - 60);
   });
   //
   /*
