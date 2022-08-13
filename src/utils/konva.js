@@ -22,7 +22,7 @@ export default function konvaStage(
   stage.add(layer);
 
   // 图形绘制layout
-  var diagramLayer = new Konva.Layer()
+  var diagramLayer = new Konva.Layer();
   stage.add(diagramLayer);
 
   let container = stage.container();
@@ -37,11 +37,15 @@ export default function konvaStage(
       y: e.offsetY,
     };
     let id = nanoid(5);
-    addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis);
-    // let canvasId = stage.attrs.container.id; // 通过canvasId知悉为第几个canvas
+    let diagram = addRectToCanvas(
+      stage,
+      id,
+      axis,
+      removeDiagramCallback,
+      updateAxis
+    );
     let canvasId = stage.attrs.container.id.split("-")[2]; // 通过canvasId知悉为第几个canvas
-    addDiagramCallback({ id, axis, canvasId });
-    // addDiagramCallback({ id, x: axis.x, y: axis.y, canvasId });
+    addDiagramCallback({ id, axis, canvasId, diagram });
   });
   return stage;
 }
@@ -97,13 +101,14 @@ function addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis) {
   diagram.on("dragend", function (params) {
     // 获取停止拖拽时元素的坐标, 以canvas左上角为原点，元素左上角的坐标
     let { x, y } = params.target.attrs;
-    // axis.x = x.toFixed(2);
-    // axis.y = y.toFixed(2);
-    // console.log(layer.canvas.height)
-    let { height } = layer.canvas // canvas 高度
-    let offsetOriginY = height - Math.floor(y)
+    let { height } = layer.canvas; // canvas 高度
+    let offsetOriginY = height - Math.floor(y);
     // updateAxis(id, x.toFixed(2), y.toFixed(2));
-    updateAxis(id, Math.floor(x) + 60, offsetOriginY - 60);
+    updateAxis(
+      id,
+      Math.floor(x) + Math.floor(diagram.attrs.width / 2),
+      Math.floor(offsetOriginY - diagram.attrs.width / 2)
+    );
   });
   //
   /*
@@ -124,6 +129,20 @@ function addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis) {
   layer.add(diagram);
 
   if (layers.length < 2) stage.add(layer);
+
+  diagram.scaleFn = diagramScaleFn();
+  function diagramScaleFn() {
+    let baseWidth = diagram.attrs.width;
+    let baseHeight = diagram.attrs.height;
+    return function (scale) {
+      diagram.attrs.height = Math.floor(baseHeight * scale);
+      diagram.attrs.width = Math.floor(baseWidth * scale);
+      diagram.attrs.x = Math.floor(diagram.attrs.x * scale);
+      diagram.attrs.y = Math.floor(diagram.attrs.y * scale);
+    };
+  }
+
+  return diagram;
 }
 
 // 往canvas中添加圆形

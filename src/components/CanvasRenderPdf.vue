@@ -8,10 +8,13 @@ onMounted(() => {
   initCanvasStage();
 });
 
+const canvasWidthBase = 612;
+const canvasHeightBase = 792;
+
 const canvasIdArray = reactive([]);
-let canvasScale = ref(0.95);
-let canvasWidth = ref(612);
-let canvasHeight = ref(792);
+let canvasScale = ref(1);
+let canvasWidth = ref(canvasWidthBase);
+let canvasHeight = ref(canvasHeightBase);
 let konvaStageArray = reactive([]);
 let diagramArray = reactive([]); // 插入到canvas中的图形
 
@@ -43,13 +46,17 @@ function initCanvasStage() {
     });
   }
 
-  // getDocument("/src/assets/UML.pdf").promise.then((pdf) => {
   getDocument(pdfPath.value).promise.then((pdf) => {
     if (!canvasIdArray.length) generateCanvasId(pdf.numPages); // 根据页数生成canvas id数量
     nextTick(() => {
       if (canvasIdArray.length && !konvaStageArray.length)
         generateKonvaStage(canvasIdArray); // 根据页数生成konva stage数量
-      renderPDF(pdfPath.value, canvasScale.value, canvasIdArray);
+      renderPDF(
+        pdfPath.value,
+        canvasIdArray,
+        canvasWidth.value,
+        canvasHeight.value
+      );
     });
   });
 }
@@ -57,19 +64,44 @@ function initCanvasStage() {
 // 添加图形
 function addDiagram(diagram) {
   diagramArray.push(diagram);
-  // console.log(diagramArray);
 }
 
+// 删除图形
 function removeDiagram(id) {
   let index = diagramArray.findIndex((el) => el.id === id);
   diagramArray.splice(index, 1);
-  // console.log(diagramArray);
 }
 
+// 更新图形的坐标值
 function updateDiagramAxis(id, x, y) {
   let diagram = diagramArray.find((el) => el.id === id);
-  diagram.axis.x = x;
-  diagram.axis.y = y;
+  diagram.axis.x = Math.floor(x / canvasScale.value);
+  diagram.axis.y = Math.floor(y / canvasScale.value);
+}
+
+// canvas缩放
+function scaleChange(scale) {
+  canvasScale.value = scale;
+  canvasWidth.value = canvasWidthBase * scale;
+  canvasHeight.value = canvasHeightBase * scale;
+  // 根据缩放值，更新stage的宽高
+  konvaStageArray.forEach((stage) => {
+    stage.width(canvasWidth.value);
+    stage.height(canvasHeight.value);
+  });
+  // 重绘pdf
+  renderPDF(
+    pdfPath.value,
+    canvasIdArray,
+    canvasWidth.value,
+    canvasHeight.value
+  );
+  // console.log(diagramArray);
+  diagramArray.forEach((item) => {
+    item.diagram.scaleFn(scale);
+  });
+  // canvasScale.value = scale;
+  // initCanvasStage();
 }
 </script>
 <template>
@@ -81,6 +113,17 @@ function updateDiagramAxis(id, x, y) {
       </div>
     </div>
     <div class="canvas-container">
+      <div>
+        <input
+          type="range"
+          name="scale"
+          :value="canvasScale * 100"
+          min="20"
+          max="200"
+          id="scale"
+          @change="scaleChange($event.target.value / 100)"
+        />
+      </div>
       <div
         v-for="id in canvasIdArray"
         :key="id"

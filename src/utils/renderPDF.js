@@ -3,11 +3,8 @@ import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 GlobalWorkerOptions.workerSrc = "/src/assets/pdf.worker.js";
 // 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.worker.js'
 
-
-
-export function renderPDF(pdfPath,canvasScale, canvasIds) {
-  if (!canvasIds.length)
-    throw new Error("Please run initCanvasStage first");
+export function renderPDF(pdfPath, canvasIds, canvasWidth, canvasHeight) {
+  if (!canvasIds.length) throw new Error("Please run initCanvasStage first");
   // 找到canvas节点
   function findCanvasNode(id) {
     let node = document.getElementById(id);
@@ -21,8 +18,11 @@ export function renderPDF(pdfPath,canvasScale, canvasIds) {
     while (currentPage <= pageNumber) {
       (function (currentPage) {
         pdf.getPage(currentPage).then((page) => {
-          var scale = canvasScale;
-          var viewport = page.getViewport({ scale: scale });
+          var viewport = page.getViewport({ scale: 1 });
+          let scaleWidth = canvasWidth / viewport.width;
+          let scaleHeight = canvasHeight / viewport.height;
+          let scale = scaleHeight > scaleWidth ? scaleWidth : scaleHeight;
+          let scaleViewport = page.getViewport({ scale: scale });
           var outputScale = window.devicePixelRatio || 1;
           var canvas = findCanvasNode(canvasIds[currentPage - 1]);
           var context = canvas.getContext("2d");
@@ -32,7 +32,8 @@ export function renderPDF(pdfPath,canvasScale, canvasIds) {
           var renderContext = {
             canvasContext: context,
             transform: transform,
-            viewport: viewport,
+            // viewport: viewport,
+            viewport: scaleViewport,
           };
           page.render(renderContext);
         });
