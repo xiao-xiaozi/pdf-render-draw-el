@@ -96,12 +96,10 @@ function scaleChange(scale) {
     canvasWidth.value,
     canvasHeight.value
   );
-  // console.log(diagramArray);
+  // 根据scale值，更新图形的的宽高
   diagramArray.forEach((item) => {
     item.diagram.scaleFn(scale);
   });
-  // canvasScale.value = scale;
-  // initCanvasStage();
 }
 </script>
 <template>
