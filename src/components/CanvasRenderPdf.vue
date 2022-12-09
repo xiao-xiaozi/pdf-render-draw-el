@@ -103,6 +103,23 @@ function scaleChange(scale) {
 }
 </script>
 <template>
+  <div class="header">
+    <div class="header-left"></div>
+    <div class="header-center">
+      <div>
+        <input
+          type="range"
+          name="scale"
+          :value="canvasScale * 100"
+          min="20"
+          max="200"
+          step="10"
+          id="scale"
+          @change="scaleChange($event.target.value / 100)"/>
+      </div>
+    </div>
+    <div class="header-right"></div>
+  </div>
   <section class="canvas-render-pdf">
     <!-- 可添加的元素 -->
     <div class="diagram-container">
@@ -111,24 +128,12 @@ function scaleChange(scale) {
       </div>
     </div>
     <div class="canvas-container">
-      <div>
-        <input
-          type="range"
-          name="scale"
-          :value="canvasScale * 100"
-          min="20"
-          max="200"
-          id="scale"
-          @change="scaleChange($event.target.value / 100)"
-        />
-      </div>
       <div
         v-for="id in canvasIdArray"
         :key="id"
         :data-page="id"
         :id="id"
-        class=""
-      ></div>
+        class=""></div>
     </div>
     <!-- 元素的坐标，页数信息 -->
     <div class="diagram-coordinates">
@@ -151,8 +156,20 @@ function scaleChange(scale) {
   </section>
 </template>
 <style lang="scss" scoped>
+.header {
+  height: 30px;
+  border-bottom:1px solid #ccc;
+  display: flex;
+  .header-center {
+    flex:1;
+  }
+  .header-left,.header-right {
+    width: 400%;
+  }
+}
 .canvas-render-pdf {
   display: flex;
+  padding: 10px;
   .diagram-container,
   .diagram-coordinates {
     width: 400px;

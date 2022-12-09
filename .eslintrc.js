@@ -28,6 +28,7 @@ module.exports = {
         ignores: ["index"], // 需要忽略的组件名
       },
     ],
+    "vue/html-closing-bracket-spacing":["error"],
     "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
     "no-console": "off",
   },
