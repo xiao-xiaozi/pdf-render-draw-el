@@ -18,7 +18,8 @@ let canvasHeight = ref(canvasHeightBase);
 let konvaStageArray = reactive([]);
 let diagramArray = reactive([]); // 插入到canvas中的图形
 
-let pdfPath = ref("/src/assets/UML.pdf");
+// let pdfPath = ref("/src/assets/UML.pdf");
+let pdfPath = ref("/src/assets/员工劳动合同.pdf");
 
 function initCanvasStage() {
   // 根据输入数量，生成canvasId
@@ -80,10 +81,15 @@ function updateDiagramAxis(id, x, y) {
 }
 
 // canvas缩放
-function scaleChange(scale) {
-  canvasScale.value = scale;
-  canvasWidth.value = canvasWidthBase * scale;
-  canvasHeight.value = canvasHeightBase * scale;
+function scaleChange(type) {
+  // canvasScale.value = scale;
+  if(type === 'add') canvasScale.value += 0.2
+  if(type === 'subtract') {
+    if(canvasScale === 1) return
+    canvasScale.value -= 0.2
+  }
+  canvasWidth.value = canvasWidthBase * canvasScale.value;
+  canvasHeight.value = canvasHeightBase * canvasScale.value;
   // 根据缩放值，更新stage的宽高
   konvaStageArray.forEach((stage) => {
     stage.width(canvasWidth.value);
@@ -106,16 +112,19 @@ function scaleChange(scale) {
   <div class="header">
     <div class="header-left"></div>
     <div class="header-center">
-      <div>
-        <input
+      <div class="canvas-scale-control">
+        <!-- <input
           type="range"
           name="scale"
           :value="canvasScale * 100"
-          min="20"
-          max="200"
-          step="10"
+          :min="20"
+          :max="200"
+          :step="10"
           id="scale"
-          @change="scaleChange($event.target.value / 100)"/>
+          @change="scaleChange($event.target.value / 100)"/> -->
+          <div>{{canvasScale * 100 + '%'}}</div>
+          <input class="scale-button" type="button" :disabled="canvasScale == 1" @click="scaleChange('subtract')" value="-" />
+          <input class="scale-button" type="button" value="+" @click="scaleChange('add')" />
       </div>
     </div>
     <div class="header-right"></div>
@@ -162,6 +171,13 @@ function scaleChange(scale) {
   display: flex;
   .header-center {
     flex:1;
+    .canvas-scale-control {
+      display: flex;
+      .scale-button {
+        // padding: 0 5px;
+        margin: 0 5px;
+      }
+    }
   }
   .header-left,.header-right {
     width: 400%;
