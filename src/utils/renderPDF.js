@@ -21,12 +21,13 @@ export function renderPDF(pdfPath, canvasIds, canvasWidth, canvasHeight) {
           var viewport = page.getViewport({ scale: 1 });
           let scaleWidth = canvasWidth / viewport.width;
           let scaleHeight = canvasHeight / viewport.height;
-          // let scale = scaleHeight > scaleWidth ? scaleWidth : scaleHeight;
-          let scale = scaleHeight > scaleWidth ? scaleHeight : scaleWidth;
+          let scale = scaleHeight > scaleWidth ? scaleWidth : scaleHeight;
+          // let scale = scaleHeight > scaleWidth ? scaleHeight : scaleWidth;
           let scaleViewport = page.getViewport({ scale: scale });
           var outputScale = window.devicePixelRatio || 1;
           var canvas = findCanvasNode(canvasIds[currentPage - 1]);
-          var context = canvas.getContext("2d");
+          // var context = canvas.getContext("2d");
+          var context = canvas.getContext("2d", { willReadFrequently: true });
           // 水平位置
           // var transform = [1.1, 0, 0, 1.1, 0, 0]
           let transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;

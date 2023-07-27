@@ -3,6 +3,7 @@ import { reactive, ref, onMounted, nextTick } from "vue";
 import { getDocument } from "pdfjs-dist";
 import konvaStage from "../utils/konva.js";
 import { renderPDF } from "../utils/renderPDF.js";
+import { debounce } from "lodash"
 
 onMounted(() => {
   initCanvasStage();
@@ -19,7 +20,7 @@ let konvaStageArray = reactive([]);
 let diagramArray = reactive([]); // 插入到canvas中的图形
 
 // let pdfPath = ref("/src/assets/UML.pdf");
-let pdfPath = ref("/src/assets/员工劳动合同.pdf");
+let pdfPath = ref("/src/assets/1.pdf");
 
 function initCanvasStage() {
   // 根据输入数量，生成canvasId
@@ -51,7 +52,7 @@ function initCanvasStage() {
     if (!canvasIdArray.length) generateCanvasId(pdf.numPages); // 根据页数生成canvas id数量
     nextTick(() => {
       if (canvasIdArray.length && !konvaStageArray.length)
-        generateKonvaStage(canvasIdArray); // 根据页数生成konva stage数量
+      generateKonvaStage(canvasIdArray); // 根据页数生成konva stage数量
       renderPDF(
         pdfPath.value,
         canvasIdArray,
@@ -81,12 +82,13 @@ function updateDiagramAxis(id, x, y) {
 }
 
 // canvas缩放
-function scaleChange(type) {
-  // canvasScale.value = scale;
-  if(type === 'add') canvasScale.value += 0.2
+const scaleChange = debounce(function(type){
+    // canvasScale.value = scale;
+  if(type === 'add') canvasScale.value = (canvasScale.value * 10 + (0.2 * 10)) / 10
   if(type === 'subtract') {
     if(canvasScale === 1) return
-    canvasScale.value -= 0.2
+    // canvasScale.value -= 0.2
+    canvasScale.value = ( canvasScale.value * 10 - 2 ) / 10
   }
   canvasWidth.value = canvasWidthBase * canvasScale.value;
   canvasHeight.value = canvasHeightBase * canvasScale.value;
@@ -104,9 +106,10 @@ function scaleChange(type) {
   );
   // 根据scale值，更新图形的的宽高
   diagramArray.forEach((item) => {
-    item.diagram.scaleFn(scale);
+    // item.diagram.scaleFn(scale);
+    item.diagram.scaleFn(canvasScale.value);
   });
-}
+}, 500)
 </script>
 <template>
   <div class="header">
@@ -184,6 +187,8 @@ function scaleChange(type) {
   }
 }
 .canvas-render-pdf {
+  height: calc(100vh - 60px);
+  overflow-y: auto;
   display: flex;
   padding: 10px;
   .diagram-container,
