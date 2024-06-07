@@ -13,7 +13,7 @@
     "lodash": "^4.17.21",
     "nanoid": "^4.0.0",
     "normalize.css": "^8.0.1",
-    "pdfjs-dist": "^2.14.305",
+    "pdfjs-dist": "^4.2.67",
     "prettier": "^2.7.1",
     "vue": "^3.2.25"
   },
