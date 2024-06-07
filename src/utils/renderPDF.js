@@ -1,7 +1,6 @@
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import { getDocument } from "pdfjs-dist";
+import "pdfjs-dist/build/pdf.worker.mjs"
 
-GlobalWorkerOptions.workerSrc = "/src/assets/pdf.worker.js";
-// 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.worker.js'
 
 export function renderPDF(pdfPath, canvasIds, canvasWidth, canvasHeight) {
   if (!canvasIds.length) throw new Error("Please run initCanvasStage first");
