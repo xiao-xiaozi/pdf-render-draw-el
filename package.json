@@ -10,25 +10,30 @@
   },
   "dependencies": {
     "konva": "^8.3.10",
-    "lodash": "^4.17.21",
-    "nanoid": "^4.0.0",
+    "lodash": "^4.17.23",
+    "nanoid": "^5.1.6",
     "normalize.css": "^8.0.1",
-    "pdfjs-dist": "^4.2.67",
+    "pdfjs-dist": "^4.8.69",
     "prettier": "^2.7.1",
-    "vite-plugin-top-level-await": "^1.4.1",
+    "vite-plugin-top-level-await": "^1.6.0",
     "vue": "^3.2.25"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.3.3",
-    "eslint": "^8.17.0",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "eslint": "^8.57.1",
     "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.2.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-n": "^17.24.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-vue": "^9.1.0",
-    "sass": "^1.52.1",
-    "vite": "^2.9.17",
-    "vite-plugin-eslint": "^1.6.1"
+    "eslint-plugin-vue": "^9.33.0",
+    "rollup": "^4.59.0",
+    "sass": "^1.98.0",
+    "vite": "^6.4.1"
+  },
+  "overrides": {
+    "brace-expansion": "^1.1.12",
+    "cross-spawn": "^7.0.6",
+    "minimatch": "^3.1.4"
   }
 }
