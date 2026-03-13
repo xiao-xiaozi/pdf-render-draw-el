@@ -1,119 +1,119 @@
 <script setup>
-import { reactive, ref, onMounted, nextTick } from "vue";
-import { getDocument } from "pdfjs-dist";
-import konvaStage from "../utils/konva.js";
-import { renderPDF } from "../utils/renderPDF.js";
-import { debounce } from "lodash"
+import { reactive, ref, onMounted, nextTick } from 'vue'
+import { getDocument } from 'pdfjs-dist'
+import konvaStage from '../utils/konva.js'
+import { renderPDF } from '../utils/renderPDF.js'
+import { debounce } from 'lodash'
 
 onMounted(() => {
-  initCanvasStage();
-});
+  initCanvasStage()
+})
 
-const canvasWidthBase = 612;
-const canvasHeightBase = 792;
+const canvasWidthBase = 612
+const canvasHeightBase = 792
 
-const canvasIdArray = reactive([]);
-let canvasScale = ref(1);
-let canvasWidth = ref(canvasWidthBase);
-let canvasHeight = ref(canvasHeightBase);
-let konvaStageArray = reactive([]);
-let diagramArray = reactive([]); // 插入到canvas中的图形
+const canvasIdArray = reactive([])
+const canvasScale = ref(1)
+const canvasWidth = ref(canvasWidthBase)
+const canvasHeight = ref(canvasHeightBase)
+const konvaStageArray = reactive([])
+const diagramArray = reactive([]) // 插入到canvas中的图形
 
 // let pdfPath = ref("/src/assets/UML.pdf");
-let pdfPath = ref("/src/assets/1.pdf");
+const pdfPath = ref('/src/assets/1.pdf')
 
-function initCanvasStage() {
+function initCanvasStage () {
   // 根据输入数量，生成canvasId
-  function generateCanvasId(num) {
-    let count = 1;
+  function generateCanvasId (num) {
+    let count = 1
     while (count <= num) {
-      canvasIdArray.push(`canvas-page-${count}`);
-      count++;
+      canvasIdArray.push(`canvas-page-${count}`)
+      count++
     }
   }
 
   // 根据canvasId数量，生成Konva Stage数量
-  function generateKonvaStage(canvasIdArray) {
+  function generateKonvaStage (canvasIdArray) {
     canvasIdArray.forEach((id) => {
       konvaStageArray.push(
         konvaStage(
           id,
           canvasWidth.value,
           canvasHeight.value,
+          () => canvasScale.value,
           addDiagram.bind(this),
           removeDiagram.bind(this),
           updateDiagramAxis
         )
-      );
-    });
+      )
+    })
   }
 
   getDocument(pdfPath.value).promise.then((pdf) => {
-    if (!canvasIdArray.length) generateCanvasId(pdf.numPages); // 根据页数生成canvas id数量
+    if (!canvasIdArray.length) generateCanvasId(pdf.numPages) // 根据页数生成canvas id数量
     nextTick(() => {
-      if (canvasIdArray.length && !konvaStageArray.length)
-      generateKonvaStage(canvasIdArray); // 根据页数生成konva stage数量
+      if (canvasIdArray.length && !konvaStageArray.length) { generateKonvaStage(canvasIdArray) } // 根据页数生成konva stage数量
       renderPDF(
         pdfPath.value,
         canvasIdArray,
         canvasWidth.value,
         canvasHeight.value
-      );
-    });
-  });
+      )
+    })
+  })
 }
 
 // 添加图形
-function addDiagram(diagram) {
-  diagramArray.push(diagram);
+function addDiagram (diagram) {
+  diagramArray.push(diagram)
 }
 
 // 删除图形
-function removeDiagram(id) {
-  let index = diagramArray.findIndex((el) => el.id === id);
-  diagramArray.splice(index, 1);
+function removeDiagram (id) {
+  const index = diagramArray.findIndex((el) => el.id === id)
+  diagramArray.splice(index, 1)
 }
 
 // 更新图形的坐标值
-function updateDiagramAxis(id, x, y) {
-  let diagram = diagramArray.find((el) => el.id === id);
-  diagram.axis.x = Math.floor(x / canvasScale.value);
-  diagram.axis.y = Math.floor(y / canvasScale.value);
+function updateDiagramAxis (id, x, y) {
+  const diagram = diagramArray.find((el) => el.id === id)
+  if (!diagram) return
+  diagram.axis.x = Math.floor(x / canvasScale.value)
+  diagram.axis.y = Math.floor(y / canvasScale.value)
 }
 
 // canvas缩放
-const scaleChange = debounce(function(type){
-    // canvasScale.value = scale;
-  if(type === 'add') canvasScale.value = (canvasScale.value * 10 + (0.2 * 10)) / 10
-  if(type === 'subtract') {
-    if(canvasScale === 1) return
+const scaleChange = debounce(function (type) {
+  // canvasScale.value = scale;
+  if (type === 'add') canvasScale.value = (canvasScale.value * 10 + (0.2 * 10)) / 10
+  if (type === 'subtract') {
+    if (canvasScale.value === 1) return
     // canvasScale.value -= 0.2
-    canvasScale.value = ( canvasScale.value * 10 - 2 ) / 10
+    canvasScale.value = (canvasScale.value * 10 - 2) / 10
   }
-  canvasWidth.value = canvasWidthBase * canvasScale.value;
-  canvasHeight.value = canvasHeightBase * canvasScale.value;
+  canvasWidth.value = canvasWidthBase * canvasScale.value
+  canvasHeight.value = canvasHeightBase * canvasScale.value
   // 根据缩放值，更新stage的宽高
   konvaStageArray.forEach((stage) => {
-    stage.width(canvasWidth.value);
-    stage.height(canvasHeight.value);
-  });
+    stage.width(canvasWidth.value)
+    stage.height(canvasHeight.value)
+  })
   // 重绘pdf
   renderPDF(
     pdfPath.value,
     canvasIdArray,
     canvasWidth.value,
     canvasHeight.value
-  );
+  )
   // 根据scale值，更新图形的的宽高
   diagramArray.forEach((item) => {
-    // item.diagram.scaleFn(scale);
-    item.diagram.scaleFn(canvasScale.value);
-  });
+    item.diagram.scaleFn(canvasScale.value)
+  })
 }, 500)
 </script>
 <template>
   <div class="header">
-    <div class="header-left"></div>
+    <div class="header-left" />
     <div class="header-center">
       <div class="canvas-scale-control">
         <!-- <input
@@ -125,42 +125,76 @@ const scaleChange = debounce(function(type){
           :step="10"
           id="scale"
           @change="scaleChange($event.target.value / 100)"/> -->
-          <div>{{canvasScale * 100 + '%'}}</div>
-          <input class="scale-button" type="button" :disabled="canvasScale == 1" @click="scaleChange('subtract')" value="-" />
-          <input class="scale-button" type="button" value="+" @click="scaleChange('add')" />
+        <div>{{ canvasScale * 100 + '%' }}</div>
+        <input
+          class="scale-button"
+          type="button"
+          :disabled="canvasScale == 1"
+          value="-"
+          @click="scaleChange('subtract')"
+        >
+        <input
+          class="scale-button"
+          type="button"
+          value="+"
+          @click="scaleChange('add')"
+        >
       </div>
     </div>
-    <div class="header-right"></div>
+    <div class="header-right" />
   </div>
   <section class="canvas-render-pdf">
     <!-- 可添加的元素 -->
     <div class="diagram-container">
       <div class="position-box">
-        <div class="square" draggable="true"></div>
+        <div
+          class="square"
+          draggable="true"
+        />
       </div>
     </div>
     <div class="canvas-container">
       <div
         v-for="id in canvasIdArray"
+        :id="id"
         :key="id"
         :data-page="id"
-        :id="id"
-        class=""></div>
+        class=""
+      />
     </div>
     <!-- 元素的坐标，页数信息 -->
     <div class="diagram-coordinates">
       <div class="position-box">
         <!-- <button @click="initCanvasStage">渲染PDF</button> -->
-        <section class="axis" v-if="diagramArray.length">
+        <section
+          v-if="diagramArray.length"
+          class="axis"
+        >
           <div class="diagram-attr">
-            <div class="flex-1">页码</div>
-            <div class="flex-1">X坐标</div>
-            <div class="flex-1">Y坐标</div>
+            <div class="flex-1">
+              页码
+            </div>
+            <div class="flex-1">
+              X坐标
+            </div>
+            <div class="flex-1">
+              Y坐标
+            </div>
           </div>
-          <div v-for="item in diagramArray" :key="item.id" class="diagram-attr">
-            <div class="flex-1">{{ item.canvasId }}</div>
-            <div class="flex-1">{{ item.axis.x }}</div>
-            <div class="flex-1">{{ item.axis.y }}</div>
+          <div
+            v-for="item in diagramArray"
+            :key="item.id"
+            class="diagram-attr"
+          >
+            <div class="flex-1">
+              {{ item.canvasId }}
+            </div>
+            <div class="flex-1">
+              {{ item.axis.x }}
+            </div>
+            <div class="flex-1">
+              {{ item.axis.y }}
+            </div>
           </div>
         </section>
       </div>

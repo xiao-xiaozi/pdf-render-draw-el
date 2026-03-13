@@ -1,219 +1,170 @@
-import Konva from "konva";
-import { nanoid } from "nanoid";
+import Konva from 'konva'
+import { nanoid } from 'nanoid'
 
-export default function konvaStage(
+export default function konvaStage (
   id,
   width,
   height,
+  getScale,
   addDiagramCallback,
   removeDiagramCallback,
   updateAxis
 ) {
-  var stage = new Konva.Stage({
+  const stage = new Konva.Stage({
     container: id,
-    width: width,
-    height: height,
-  });
+    width,
+    height
+  })
 
-  // 这层layer不能移除，渲染pdf时需要用到
-  var layer = new Konva.Layer({
-    // clearBeforeDraw: false,
-  });
-  stage.add(layer);
+  // This layer must stay at index 0 because the PDF canvas is mounted there.
+  const layer = new Konva.Layer({})
+  stage.add(layer)
 
-  // 图形绘制layout
-  var diagramLayer = new Konva.Layer();
-  stage.add(diagramLayer);
+  const diagramLayer = new Konva.Layer()
+  stage.add(diagramLayer)
 
-  let container = stage.container();
-  container.addEventListener("dragover", function (e) {
-    e.preventDefault(); // !important
-  });
+  const container = stage.container()
+  container.addEventListener('dragover', function (e) {
+    e.preventDefault()
+  })
 
-  container.addEventListener("drop", function (e) {
-    // 元素坐标
-    let axis = {
-      x: e.offsetX,
-      y: e.offsetY,
-    };
-    let id = nanoid(5);
-    let diagram = addRectToCanvas(
+  container.addEventListener('drop', function (e) {
+    const scale = getScale()
+    const axis = {
+      x: Math.floor(e.offsetX / scale),
+      y: Math.floor((stage.height() - e.offsetY) / scale)
+    }
+    const id = nanoid(5)
+    const diagram = addRectToCanvas(
       stage,
       id,
       axis,
+      scale,
       removeDiagramCallback,
-      updateAxis
-    );
-    let canvasId = stage.attrs.container.id.split("-")[2]; // 通过canvasId知悉为第几个canvas
-    addDiagramCallback({ id, axis, canvasId, diagram });
-  });
-  return stage;
+      updateAxis,
+      getScale
+    )
+    const canvasId = stage.attrs.container.id.split('-')[2]
+    addDiagramCallback({ id, axis, canvasId, diagram })
+  })
+
+  return stage
 }
 
-// 往canvas中添加方形
-function addRectToCanvas(stage, id, axis, removeDiagramCallback, updateAxis) {
-  let layer;
-  let layers = stage.getLayers();
+function addRectToCanvas (
+  stage,
+  id,
+  axis,
+  scale,
+  removeDiagramCallback,
+  updateAxis,
+  getScale
+) {
+  let layer
+  const layers = stage.getLayers()
   if (layers.length >= 2) {
-    layer = layers[layers.length - 1];
+    layer = layers[layers.length - 1]
   } else {
-    layer = new Konva.Layer();
+    layer = new Konva.Layer()
   }
 
-  var diagram = new Konva.Rect({
-    // react坐标点为左上角
-    x: axis.x - 100 / 2,
-    y: axis.y - 100 / 2,
-    fill: "orange",
-    stroke: "black",
+  const baseWidth = 120
+  const baseHeight = 120
+  const diagram = new Konva.Rect({
+    fill: 'orange',
+    stroke: 'black',
     strokeWidth: 1,
-    draggable: true,
-    width: 120,
-    height: 120,
-  });
-  diagram.on("dragstart", function () {
-    this.moveToTop();
-  });
+    draggable: true
+  })
 
-  diagram.on("dragmove", function () {
-    document.body.style.cursor = "pointer";
-  });
-  // 限制拖拽边界
+  diagram.baseAxis = { ...axis }
+  diagram.baseSize = {
+    width: baseWidth,
+    height: baseHeight
+  }
+
+  applyScale(scale)
+
+  diagram.on('dragstart', function () {
+    this.moveToTop()
+  })
+
+  diagram.on('dragmove', function () {
+    document.body.style.cursor = 'pointer'
+  })
+
   diagram.dragBoundFunc(function (pos) {
-    var newPos = {
+    const newPos = {
       x: pos.x,
-      y: pos.y,
-    };
+      y: pos.y
+    }
     if (newPos.x < 0) {
-      newPos.x = 0;
+      newPos.x = 0
     }
     if (newPos.y < 0) {
-      newPos.y = 0;
+      newPos.y = 0
     }
     if (newPos.x > stage.width() - diagram.width()) {
-      newPos.x = stage.width() - diagram.width();
+      newPos.x = stage.width() - diagram.width()
     }
     if (newPos.y > stage.height() - diagram.height()) {
-      newPos.y = stage.height() - diagram.height();
+      newPos.y = stage.height() - diagram.height()
     }
-    return newPos;
-  });
-  diagram.on("dragend", function (params) {
-    // 获取停止拖拽时元素的坐标, 以canvas左上角为原点，元素左上角的坐标
-    let { x, y } = params.target.attrs;
-    let { height } = layer.canvas; // canvas 高度
-    let offsetOriginY = height - Math.floor(y);
-    // updateAxis(id, x.toFixed(2), y.toFixed(2));
+    return newPos
+  })
+
+  diagram.on('dragend', function (params) {
+    const { x, y } = params.target.attrs
+    const currentScale = getScale()
+    const centerX = x + diagram.width() / 2
+    const centerY = y + diagram.height() / 2
+
+    diagram.baseAxis.x = Math.floor(centerX / currentScale)
+    diagram.baseAxis.y = Math.floor((stage.height() - centerY) / currentScale)
+
     updateAxis(
       id,
-      Math.floor(x) + Math.floor(diagram.attrs.width / 2),
-      Math.floor(offsetOriginY - diagram.attrs.width / 2)
-    );
-  });
-  //
-  /*
-   * dblclick to remove diagram for desktop app
-   * and dbltap to remove diagram for mobile app
-   */
-  diagram.on("dblclick dbltap", function () {
-    removeDiagramCallback(id);
-    this.destroy();
-  });
+      diagram.baseAxis.x * currentScale,
+      diagram.baseAxis.y * currentScale
+    )
+  })
 
-  diagram.on("mouseover", function () {
-    document.body.style.cursor = "pointer";
-  });
-  diagram.on("mouseout", function () {
-    document.body.style.cursor = "default";
-  });
-  layer.add(diagram);
+  diagram.on('dblclick dbltap', function () {
+    removeDiagramCallback(id)
+    this.destroy()
+  })
 
-  if (layers.length < 2) stage.add(layer);
+  diagram.on('mouseover', function () {
+    document.body.style.cursor = 'pointer'
+  })
 
-  diagram.scaleFn = diagramScaleFn();
-  function diagramScaleFn() {
-    let baseWidth = diagram.attrs.width;
-    let baseHeight = diagram.attrs.height;
-    return function (scale) {
-      diagram.attrs.height = Math.floor(baseHeight * scale);
-      diagram.attrs.width = Math.floor(baseWidth * scale);
-      diagram.attrs.x = Math.floor(diagram.attrs.x * scale);
-      diagram.attrs.y = Math.floor(diagram.attrs.y * scale);
-    };
+  diagram.on('mouseout', function () {
+    document.body.style.cursor = 'default'
+  })
+
+  layer.add(diagram)
+
+  if (layers.length < 2) stage.add(layer)
+
+  diagram.scaleFn = function (nextScale) {
+    applyScale(nextScale)
+    layer.batchDraw()
   }
 
-  return diagram;
-}
+  function applyScale (nextScale) {
+    const scaledWidth = Math.floor(diagram.baseSize.width * nextScale)
+    const scaledHeight = Math.floor(diagram.baseSize.height * nextScale)
+    const x = Math.floor(diagram.baseAxis.x * nextScale - scaledWidth / 2)
+    const y = Math.floor(
+      stage.height() - diagram.baseAxis.y * nextScale - scaledHeight / 2
+    )
 
-// 往canvas中添加圆形
-function addCircleToCanvas(stage) {
-  let layer;
-  let layers = stage.getLayers();
-  if (layers.length >= 2) {
-    layer = layers[layers.length - 1];
-  } else {
-    layer = new Konva.Layer();
+    diagram.size({
+      width: scaledWidth,
+      height: scaledHeight
+    })
+    diagram.position({ x, y })
   }
 
-  let diagram = new Konva.Circle({
-    // 坐标点为圆心
-    x: 1 * 30 + 5,
-    y: 1 * 18 + 4,
-    radius: 50,
-    fill: "orange",
-    draggable: true,
-    width: 100,
-    height: 100,
-  });
-  //
-  diagram.on("dragstart", function () {
-    this.moveToTop();
-  });
-
-  diagram.on("dragmove", function () {
-    document.body.style.cursor = "pointer";
-  });
-  // 限制拖拽边界
-  diagram.dragBoundFunc(function (pos) {
-    var newPos = {
-      x: pos.x,
-      y: pos.y,
-    };
-    if (newPos.x < 0) {
-      newPos.x = 0;
-    }
-    if (newPos.y < 0) {
-      newPos.y = 0;
-    }
-    if (newPos.x > stage.width() - diagram.width()) {
-      newPos.x = stage.width() - diagram.width();
-    }
-    if (newPos.y > stage.height() - diagram.height()) {
-      newPos.y = stage.height() - diagram.height();
-    }
-    return newPos;
-  });
-  diagram.on("dragend", function (params) {
-    // 获取停止拖拽时元素的坐标
-    let { x, y } = params.target.attrs; // 以canvas左上角为原点，元素左上角的坐标
-    console.log(x, y);
-  });
-  //
-  /*
-   * dblclick to remove diagram for desktop app
-   * and dbltap to remove diagram for mobile app
-   */
-  diagram.on("dblclick dbltap", function () {
-    this.destroy();
-  });
-
-  diagram.on("mouseover", function () {
-    document.body.style.cursor = "pointer";
-  });
-  diagram.on("mouseout", function () {
-    document.body.style.cursor = "default";
-  });
-  layer.add(diagram);
-
-  if (layers.length < 2) stage.add(layer);
+  return diagram
 }

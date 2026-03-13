@@ -1,4 +1,4 @@
-function Drawer (canvas, x, y, width, height) {
+export default function Drawer (canvas, x, y, width, height) {
   this.canvas = canvas
   // this.x = x;
   // this.y = y;
