@@ -1,7 +1,7 @@
 ## pdf-render-draw-el
 
-灏哖DF鏂囦欢锛屾覆鏌撳埌canvas涓紝骞跺線canvas娣诲姞鍙嫋鎷藉厓绱狅紝鑾峰彇鍏冪礌鍦╟anvas涓殑鍧愭爣銆?
+选择 PDF 文件，渲染到 canvas 中，并往 canvas 添加可拖拽元素，获取元素在 canvas 中的坐标。
 
 ### TodoList
 
-- [x] pdf鏂囦欢鏀惧ぇ/缂╂斁鍚庯紝鍧愭爣淇濇寔涓庡垵濮嬪寲鏃剁殑鍧愭爣鍊间竴鑷
+- [x] PDF 文件放大/缩放后，坐标保持与初始化时的坐标值一致
